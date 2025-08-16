@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        // Biến môi trường WORKSPACE của Jenkins trỏ đến thư mục project trong container
-        COMPOSE_FILE = "${WORKSPACE}/docker-compose.yml"
+        // Thư mục trên host sẽ chứa build và source copy ra
+        OUTPUT_DIR = "/Users/zanis/data/docker-compose/fproject_build"
     }
 
     stages {
@@ -14,32 +14,40 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Install Dependencies') {
             steps {
-                script {
-                    echo "🔨 Build Docker image bằng docker-compose"
-                    sh "docker compose -f ${COMPOSE_FILE} build"
-                }
+                echo "📦 Cài đặt dependencies"
+                sh 'npm install'
             }
         }
 
-        stage('Deploy with Docker Compose') {
+        stage('Build Project') {
             steps {
-                script {
-                    echo "🚀 Deploy ứng dụng bằng docker-compose"
-                    sh "docker compose -f ${COMPOSE_FILE} down"
-                    sh "docker compose -f ${COMPOSE_FILE} up -d"
-                }
+                echo "🛠 Build project"
+                sh 'npm run build'
+            }
+        }
+
+        stage('Copy Output') {
+            steps {
+                echo "📁 Copy build và source ra folder ngoài host"
+                // Tạo folder nếu chưa có
+                sh "mkdir -p ${OUTPUT_DIR}"
+                // Copy build
+                sh "cp -r build/* ${OUTPUT_DIR}/"
+                // Copy source code và package.json
+                sh "cp -r src ${OUTPUT_DIR}/src"
+                sh "cp package.json ${OUTPUT_DIR}/"
             }
         }
     }
 
     post {
         success {
-            echo "✅ Deploy thành công trên Docker Desktop!"
+            echo "✅ Build & copy thành công! Kiểm tra folder: ${OUTPUT_DIR}"
         }
         failure {
-            echo "❌ Có lỗi khi build/deploy, kiểm tra console log."
+            echo "❌ Build lỗi, kiểm tra console log."
         }
     }
 }
