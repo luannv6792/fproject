@@ -18,7 +18,7 @@ pipeline {
             steps {
                 script {
                     echo "🔨 Build Docker image bằng docker-compose"
-                    sh "docker-compose -f ${COMPOSE_FILE} build"
+                    sh "docker compose -f ${COMPOSE_FILE} build"
                 }
             }
         }
@@ -27,8 +27,8 @@ pipeline {
             steps {
                 script {
                     echo "🚀 Deploy ứng dụng bằng docker-compose"
-                    sh "docker-compose -f ${COMPOSE_FILE} down"
-                    sh "docker-compose -f ${COMPOSE_FILE} up -d"
+                    sh "docker compose -f ${COMPOSE_FILE} down"
+                    sh "docker compose -f ${COMPOSE_FILE} up -d"
                 }
             }
         }
