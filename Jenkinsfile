@@ -1,57 +1,44 @@
 pipeline {
-    agent any
-
-    environment {
-        // Thư mục trên host sẽ chứa build và source copy ra
-        OUTPUT_DIR = "/Users/zanis/data/docker-compose/fproject_build"
+    agent {
+        docker {
+            image 'node:18'   // container Node.js 18 chính thức
+            args '-v /Users/zanis/data/docker-compose/jenkins/jenkins_home/builded:/build_output'
+        }
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout từ GitHub dùng SSH key credential
-                git(
-                    url: 'git@github.com:luannv6792/fproject.git',
-                    credentialsId: 'github-ssh-key',
-                    branch: 'main'
-                )
+                echo "✅ Checkout code từ GitHub"
+                checkout scm
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install & Build') {
             steps {
-                echo "📦 Cài đặt dependencies"
+                echo "📦 Cài đặt dependencies & build"
                 sh 'npm install'
-            }
-        }
-
-        stage('Build Project') {
-            steps {
-                echo "🛠 Build project"
                 sh 'npm run build'
             }
         }
 
         stage('Copy Output') {
             steps {
-                echo "📁 Copy build và source ra folder ngoài host"
-                // Tạo folder nếu chưa có
-                sh "mkdir -p ${OUTPUT_DIR}"
-                // Copy build
-                sh "cp -r build/* ${OUTPUT_DIR}/"
-                // Copy source code và package.json
-                sh "cp -r src ${OUTPUT_DIR}/src"
-                sh "cp package.json ${OUTPUT_DIR}/"
+                echo "📁 Copy build + source ra ./jenkins_home/builded"
+                sh 'mkdir -p /build_output'
+                sh 'cp -r build/* /build_output/'
+                sh 'cp -r src /build_output/src'
+                sh 'cp package.json /build_output/'
             }
         }
     }
 
     post {
         success {
-            echo "✅ Build & copy thành công! Kiểm tra folder: ${OUTPUT_DIR}"
+            echo "✅ Build & copy thành công! Kết quả nằm trong ./jenkins_home/builded"
         }
         failure {
-            echo "❌ Build lỗi, kiểm tra console log."
+            echo "❌ Build lỗi, vui lòng kiểm tra log."
         }
     }
 }
