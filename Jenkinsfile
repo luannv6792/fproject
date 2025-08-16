@@ -9,8 +9,12 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "✅ Checkout code từ GitHub"
-                checkout scm
+                // Checkout từ GitHub dùng SSH key credential
+                git(
+                    url: 'git@github.com:luannv6792/fproject.git',
+                    credentialsId: 'github-ssh-key',
+                    branch: 'main'
+                )
             }
         }
 
