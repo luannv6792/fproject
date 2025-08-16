@@ -1,10 +1,15 @@
 pipeline {
     agent any
 
+    environment {
+        // Biến môi trường WORKSPACE của Jenkins trỏ đến thư mục project trong container
+        COMPOSE_FILE = "${WORKSPACE}/docker-compose.yml"
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Lấy code từ GitHub (Jenkins đã cấu hình SSH key)
+                echo "✅ Checkout code từ GitHub"
                 checkout scm
             }
         }
@@ -12,7 +17,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker compose build'
+                    echo "🔨 Build Docker image bằng docker-compose"
+                    sh "docker-compose -f ${COMPOSE_FILE} build"
                 }
             }
         }
@@ -20,8 +26,9 @@ pipeline {
         stage('Deploy with Docker Compose') {
             steps {
                 script {
-                    sh 'docker compose down'
-                    sh 'docker compose up -d'
+                    echo "🚀 Deploy ứng dụng bằng docker-compose"
+                    sh "docker-compose -f ${COMPOSE_FILE} down"
+                    sh "docker-compose -f ${COMPOSE_FILE} up -d"
                 }
             }
         }
@@ -29,10 +36,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Deploy thành công trên local bằng Docker Compose!"
+            echo "✅ Deploy thành công trên Docker Desktop!"
         }
         failure {
-            echo "❌ Có lỗi khi build/deploy, hãy kiểm tra log."
+            echo "❌ Có lỗi khi build/deploy, kiểm tra console log."
         }
     }
 }
